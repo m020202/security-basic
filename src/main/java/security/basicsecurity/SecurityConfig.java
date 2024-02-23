@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -61,38 +62,23 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests((auth) -> auth
-                .requestMatchers("/user").hasRole("USER")
-                .requestMatchers("/admin/pay").hasRole("ADMIN")
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SYS")
-                .requestMatchers("/login").permitAll()
-                .anyRequest().authenticated()
-        ).formLogin(form -> form
-                .successHandler(new AuthenticationSuccessHandler() {
-                    @Override
-                    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                        RequestCache requestCache = new HttpSessionRequestCache();
-                        SavedRequest savedRequest = requestCache.getRequest(request, response);
-                        String redirectUrl = savedRequest.getRedirectUrl();
-                        response.sendRedirect(redirectUrl);
-                    }
-                }));
+    @Order(0)
+    public SecurityFilterChain filterChain1(HttpSecurity http) throws Exception {
+        http.securityMatcher("/admin")
+                .authorizeHttpRequests((auth) -> auth
+                        .anyRequest().hasRole("ADMIN")
+        ).formLogin(Customizer.withDefaults());
 
-        http.exceptionHandling(form -> form
-//                .authenticationEntryPoint(new AuthenticationEntryPoint() {
-//                    @Override
-//                    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-//                        response.sendRedirect("/login");
-//                    }
-//                })
-                .accessDeniedHandler(new AccessDeniedHandler() {
-                    @Override
-                    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-                        response.sendRedirect("/denied");
-                    }
-                })
-        );
+        return http.build();
+    }
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain filterChain2(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests((auth) -> auth
+                .anyRequest().permitAll()
+        ).formLogin(Customizer.withDefaults());
+
         return http.build();
     }
 }
