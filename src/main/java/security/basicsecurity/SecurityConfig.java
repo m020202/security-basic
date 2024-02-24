@@ -18,6 +18,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -62,23 +63,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Order(0)
-    public SecurityFilterChain filterChain1(HttpSecurity http) throws Exception {
-        http.securityMatcher("/admin")
-                .authorizeHttpRequests((auth) -> auth
-                        .anyRequest().hasRole("ADMIN")
-        ).formLogin(Customizer.withDefaults());
-
-        return http.build();
-    }
-
-    @Bean
-    @Order(1)
-    public SecurityFilterChain filterChain2(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((auth) -> auth
-                .anyRequest().permitAll()
-        ).formLogin(Customizer.withDefaults());
+                .anyRequest().authenticated()
+        ).formLogin(form -> {});
 
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
         return http.build();
     }
 }
