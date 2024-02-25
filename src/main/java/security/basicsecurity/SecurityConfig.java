@@ -65,8 +65,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((auth) -> auth
-                .anyRequest().authenticated()
+                .requestMatchers("/user").hasRole("USER")
+                .anyRequest().permitAll()
         ).formLogin(form -> {});
+
+        http.exceptionHandling(form -> form
+                .accessDeniedHandler(new AccessDeniedHandler() {
+                    @Override
+                    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                        response.sendRedirect("/login");
+                    }
+                }));
 
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
         return http.build();
