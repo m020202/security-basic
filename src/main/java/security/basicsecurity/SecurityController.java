@@ -64,4 +64,9 @@ public class SecurityController {
     public String denied() {
         return "denied";
     }
+
+    @GetMapping("/hello")
+    public String hello() {
+        return "hello world!";
+    }
 }
